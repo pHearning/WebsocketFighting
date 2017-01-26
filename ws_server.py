@@ -17,7 +17,7 @@ Messages are output to the terminal for debuggin purposes.
 
 class Player():
     def __init__(self, name):
-        self.hp = 20
+        self.hp = 100
         self.name = "red"
         self.power = 1
         self.last_move = ""
@@ -33,12 +33,12 @@ class Player():
             if opponent_move == 'block':
                 return 0
             else:
-                return random.randint(1,4)*self.strength
+                return random.randint(10,20)*self.strength
         elif move.lower() == 'punch':
             if opponent_move == 'block':
-                return random.randint(1,2)*self.strength
+                return random.randint(1,10)*self.strength
             else:
-                return random.randint(1,3)*self.strength
+                return random.randint(14,18)*self.strength
         elif move.lower() == 'block':
             return 0
 
@@ -65,7 +65,7 @@ class Match():
             damage = self.blue.defence(self.red.attack(move,self.blue.last_move))
             if self.blue.hp <= 0:
                 self.running = False
-                return 'Blue is dead Red wins'
+                return json.dumps({"message":"Blue is dead Red wins", "turn": "none"})
 
             else:
                 return json.dumps({"message": "red hit blue with {0} for {1} damage.".format(move, str(damage)), "red_hp": self.red.hp, "blue_hp": self.blue.hp, "move":"{0}".format(move), "turn": "blue"})
@@ -75,13 +75,13 @@ class Match():
             damage = self.red.defence(self.blue.attack(move,self.red.last_move))
             if self.red.hp <= 0:
                 self.running = False
-                return 'Red is dead Blue wins'
+                return json.dumps({"message":"Red is dead Blue wins", "turn": "none"})
 
             else:
                 return json.dumps({"message": "blue hit red with {0} for {1} damage.".format(move, str(damage)), "red_hp": self.red.hp, "blue_hp": self.blue.hp, "move":"{0}".format(move), "turn": "red"})
 
         else:
-            return 'Please wait for your turn'
+            return json.dumps({"message":"wait your turn bitch", "turn":self.turn, "red_hp": "20", "blue_hp": "20", "move":"punch"})
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -93,13 +93,14 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         self.connections.add(self)
         print('new connection')
-        [con.write_message(json.dumps({"message":"A new player has join the game", "turn":game.turn})) for con in self.connections]
+        [con.write_message(json.dumps({"message":"A new player has join the game", "turn":game.turn, "red_hp": "20", "blue_hp": "20", "move":"punch"})) for con in self.connections]
 
     def on_message(self, message):
         message = json.loads(message)
         player = message["player"]
         move = message["move"]
         
+
         # Make a turn in the game
         response = game.round(player, move)
         time.sleep(2)
@@ -121,7 +122,7 @@ def main():
     global game
     game = Match()
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(8888, address="10.161.124.143")
+    http_server.listen(8888, address="10.216.85.113")
     myIP = socket.gethostbyname(socket.gethostname())
     print(game.turn)
     print ('*** Websocket Server Started at {0}***'.format(myIP))
