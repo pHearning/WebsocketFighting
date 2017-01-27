@@ -4,12 +4,18 @@ import time
 import json
 
 class turn_holder():
-    turn = 'red'
+    turn = ''
+    red_hp = 0
+    blue_hp = 0
+    move = ''
     
 def on_message(ws, message):
     print message
     new_message = json.loads(message)
     turn_holder.turn = new_message["turn"]
+    turn_holder.move = new_message["move"]
+    turn_holder.red_hp = new_message["red_hp"]
+    turn_holder.blue_hp = new_message["blue_hp"]
 
 def on_error(ws, error):
     print error
