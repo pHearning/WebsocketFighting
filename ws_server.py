@@ -87,13 +87,13 @@ class Match():
 class WSHandler(tornado.websocket.WebSocketHandler):
     connections = set()
     def __init__(self, *args, **kwargs):
-        game = Match()
+        self.game = Match()
         super(WSHandler, self).__init__(*args, **kwargs)
 
     def open(self):
         self.connections.add(self)
         print('new connection')
-        [con.write_message(json.dumps({"message":"A new player has join the game", "turn":game.turn, "red_hp": "20", "blue_hp": "20", "move":"punch"})) for con in self.connections]
+        [con.write_message(json.dumps({"message":"A new player has join the game", "turn":self.game.turn, "red_hp": "20", "blue_hp": "20", "move":"punch"})) for con in self.connections]
 
     def on_message(self, message):
         message = json.loads(message)
@@ -102,10 +102,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         
 
         # Make a turn in the game
-        response = game.round(player, move)
+        response = self.game.round(player, move)
         time.sleep(2)
         [con.write_message(response) for con in self.connections]
-        if not game.running:
+        if not self.game.running:
             self.close()
     def on_close(self):
         self.connections.remove(self)
@@ -119,12 +119,9 @@ application = tornado.web.Application([
 ])
 
 def main():
-    global game
-    game = Match()
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(8888, address="10.216.85.113")
+    http_server.listen(8888, address="127.0.0.1")
     myIP = socket.gethostbyname(socket.gethostname())
-    print(game.turn)
     print ('*** Websocket Server Started at {0}***'.format(myIP))
     tornado.ioloop.IOLoop.instance().start()
 
